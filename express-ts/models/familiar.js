@@ -36,7 +36,16 @@ module.exports = (sequelize, DataTypes) => {
     pattern: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    typing: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    typing2: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
+
   }, {
     tableName: 'familiars',
     timestamps: false
