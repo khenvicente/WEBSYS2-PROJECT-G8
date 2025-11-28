@@ -6,17 +6,18 @@ module.exports = {
       FamiliarID: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        allowNull: false
       },
       GroupID: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: false,
         references: {
           model: 'groups',
           key: 'GroupID'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL'
+        onDelete: 'CASCADE'
       },
       name: {
         type: Sequelize.STRING,
@@ -34,6 +35,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
+      pattern: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       personality: {
         type: Sequelize.STRING,
         allowNull: true
@@ -42,11 +47,18 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true
       },
-      pattern: {
+      typing: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      typing2: {
         type: Sequelize.STRING,
         allowNull: true
       }
     });
+
+    // Add index on foreign key
+    await queryInterface.addIndex('familiars', ['GroupID']);
   },
 
   down: async (queryInterface, Sequelize) => {

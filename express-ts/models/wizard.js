@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Wizard = sequelize.define('Wizard', {
     WizardID: {
       type: DataTypes.INTEGER,
@@ -13,10 +15,6 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'wizards',
     timestamps: false
   });
-
-  Wizard.associate = (models) => {
-    Wizard.hasMany(models.Group, { foreignKey: 'WizardID' });
-  };
 
   return Wizard;
 };

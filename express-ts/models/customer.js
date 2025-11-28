@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Customer = sequelize.define('Customer', {
     CustomerID: {
       type: DataTypes.INTEGER,
@@ -7,7 +9,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     GroupID: {
       type: DataTypes.INTEGER,
-      allowNull: true
+      allowNull: false,
+      references: {
+        model: 'groups',
+        key: 'GroupID'
+      }
     },
     name: {
       type: DataTypes.STRING,
@@ -17,11 +23,6 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'customers',
     timestamps: false
   });
-
-  Customer.associate = (models) => {
-    Customer.belongsTo(models.Group, { foreignKey: 'GroupID' });
-    Customer.hasOne(models.Contract, { foreignKey: 'CustomerID' });
-  };
 
   return Customer;
 };

@@ -6,12 +6,12 @@ module.exports = {
       ContractID: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        allowNull: false
       },
       CustomerID: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        unique: true,
         references: {
           model: 'customers',
           key: 'CustomerID'
@@ -22,7 +22,6 @@ module.exports = {
       FamiliarID: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        unique: true,
         references: {
           model: 'familiars',
           key: 'FamiliarID'
@@ -33,8 +32,25 @@ module.exports = {
       status: {
         type: Sequelize.STRING,
         allowNull: true
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
+
+    // Add indexes on foreign keys
+    await queryInterface.addIndex('contracts', ['CustomerID']);
+    await queryInterface.addIndex('contracts', ['FamiliarID']);
+    
+    // Add composite index for the relationship
+    await queryInterface.addIndex('contracts', ['CustomerID', 'FamiliarID']);
   },
 
   down: async (queryInterface, Sequelize) => {
