@@ -1,95 +1,193 @@
-import fs from 'fs';
-import path from 'path';
 import { Sequelize } from 'sequelize';
-import process from 'process';
-import { fileURLToPath } from 'url';
+import WizardModel from './Wizard';
+import GroupModel from './Group';
+import CustomerModel from './Customer';
+import FamiliarModel from './Familiar';
+import ContractModel from './Contract';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-
-// Load config
-const config = (await import(`../config/config.json`, { assert: { type: 'json' } })).default[env];
-
-const db: any = {};
-
-let sequelize: Sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-// Load models
-const files = fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.endsWith('.ts') &&
-      !file.endsWith('.test.ts')
-    );
-  });
-
-for (const file of files) {
-  const model = await import(path.join(__dirname, file));
-  const modelInstance = model.default(sequelize, Sequelize.DataTypes);
-  db[modelInstance.name] = modelInstance;
-}
-
-// Setup associations
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
+// Initialize Sequelize with your database configuration
+const sequelize = new Sequelize({
+  dialect: 'mysql', // or 'postgres', 'sqlite', 'mariadb', 'mssql'
+  host: 'localhost',
+  database: 'your_database_name',
+  username: 'your_username',
+  password: 'your_password',
+  logging: false // Set to console.log 
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// models
+const Wizard = WizardModel(sequelize);
+const Group = GroupModel(sequelize);
+const Customer = CustomerModel(sequelize);
+const Familiar = FamiliarModel(sequelize);
+const Contract = ContractModel(sequelize);
 
-export default db;
-/*'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
+//(one-to-many)
+Wizard.hasMany(Group, {
+  foreignKey: 'WizardID',
+  as: 'groups'
+});
+Group.belongsTo(Wizard, {
+  foreignKey: 'WizardID',
+  as: 'wizard'
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+//(one-to-many)
+Group.hasMany(Customer, {
+  foreignKey: 'GroupID',
+  as: 'customers'
+});
+Customer.belongsTo(Group, {
+  foreignKey: 'GroupID',
+  as: 'group'
+});
 
-module.exports = db;*/
+//(one-to-many)
+Group.hasMany(Familiar, {
+  foreignKey: 'GroupID',
+  as: 'familiars'
+});
+Familiar.belongsTo(Group, {
+  foreignKey: 'GroupID',
+  as: 'group'
+});
+
+//(many-to-many)
+Customer.belongsToMany(Familiar, {
+  through: Contract,
+  foreignKey: 'CustomerID',
+  otherKey: 'FamiliarID',
+  as: 'familiars'
+});
+Familiar.belongsToMany(Customer, {
+  through: Contract,
+  foreignKey: 'FamiliarID',
+  otherKey: 'CustomerID',
+  as: 'customers'
+});
+
+
+Contract.belongsTo(Customer, {
+  foreignKey: 'CustomerID',
+  as: 'customer'
+});
+Contract.belongsTo(Familiar, {
+  foreignKey: 'FamiliarID',
+  as: 'familiar'
+});
+
+Customer.hasMany(Contract, {
+  foreignKey: 'CustomerID',
+  as: 'contracts'
+});
+Familiar.hasMany(Contract, {
+  foreignKey: 'FamiliarID',
+  as: 'contracts'
+});
+
+// Export models and sequelize instance
+export {
+  sequelize,
+  Wizard,
+  Group,
+  Customer,
+  Familiar,
+  Contract
+};
+
+export default sequelize;
+/*'const { Sequelize } = require('sequelize');
+
+// Initialize Sequelize with your database configuration
+const sequelize = new Sequelize({
+  dialect: 'mysql', // or 'postgres', 'sqlite', 'mariadb', 'mssql'
+  host: 'localhost',
+  database: 'your_database_name',
+  username: 'your_username',
+  password: 'your_password',
+  logging: false // Set to console.log to see SQL queries
+});
+
+// Import models
+const Wizard = require('./Wizard')(sequelize);
+const Group = require('./Group')(sequelize);
+const Customer = require('./Customer')(sequelize);
+const Familiar = require('./Familiar')(sequelize);
+const Contract = require('./Contract')(sequelize);
+
+// Define associations
+
+// Wizard creates Groups (one-to-many)
+Wizard.hasMany(Group, {
+  foreignKey: 'WizardID',
+  as: 'groups'
+});
+Group.belongsTo(Wizard, {
+  foreignKey: 'WizardID',
+  as: 'wizard'
+});
+
+// Group matches Customers (one-to-many)
+Group.hasMany(Customer, {
+  foreignKey: 'GroupID',
+  as: 'customers'
+});
+Customer.belongsTo(Group, {
+  foreignKey: 'GroupID',
+  as: 'group'
+});
+
+// Group contains Familiars (one-to-many)
+Group.hasMany(Familiar, {
+  foreignKey: 'GroupID',
+  as: 'familiars'
+});
+Familiar.belongsTo(Group, {
+  foreignKey: 'GroupID',
+  as: 'group'
+});
+
+// Customer chooses Familiar via Contract (many-to-many)
+Customer.belongsToMany(Familiar, {
+  through: Contract,
+  foreignKey: 'CustomerID',
+  otherKey: 'FamiliarID',
+  as: 'familiars'
+});
+Familiar.belongsToMany(Customer, {
+  through: Contract,
+  foreignKey: 'FamiliarID',
+  otherKey: 'CustomerID',
+  as: 'customers'
+});
+
+// Direct associations for Contract
+Contract.belongsTo(Customer, {
+  foreignKey: 'CustomerID',
+  as: 'customer'
+});
+Contract.belongsTo(Familiar, {
+  foreignKey: 'FamiliarID',
+  as: 'familiar'
+});
+
+Customer.hasMany(Contract, {
+  foreignKey: 'CustomerID',
+  as: 'contracts'
+});
+Familiar.hasMany(Contract, {
+  foreignKey: 'FamiliarID',
+  as: 'contracts'
+});
+
+// Export models and sequelize instance
+module.exports = {
+  sequelize,
+  Wizard,
+  Group,
+  Customer,
+  Familiar,
+  Contract
+};/

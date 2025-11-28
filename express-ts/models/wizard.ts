@@ -1,43 +1,40 @@
-import { DataTypes, Model, Sequelize } from 'sequelize';
+import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
 
-export interface WizardAttributes {
-  WizardID?: number;
+interface WizardAttributes {
+  WizardID: number;
   name: string;
 }
 
-export class Wizard extends Model<WizardAttributes> implements WizardAttributes {
+interface WizardCreationAttributes extends Optional<WizardAttributes, 'WizardID'> {}
+
+class Wizard extends Model<WizardAttributes, WizardCreationAttributes> implements WizardAttributes {
   public WizardID!: number;
   public name!: string;
-
-  public static associate(models: any) {
-    Wizard.hasMany(models.FamiliarGroup, { foreignKey: 'WizardID' });
-  }
 }
 
 export default (sequelize: Sequelize) => {
-  Wizard.init(
-    {
-      WizardID: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-      },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false
-      }
+  Wizard.init({
+    WizardID: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
     },
-    {
-      sequelize,
-      tableName: 'wizards',
-      timestamps: false
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
     }
-  );
+  }, {
+    sequelize,
+    tableName: 'wizards',
+    timestamps: false
+  });
 
   return Wizard;
 };
 
-/*module.exports = (sequelize, DataTypes) => {
+/*const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Wizard = sequelize.define('Wizard', {
     WizardID: {
       type: DataTypes.INTEGER,
@@ -53,9 +50,6 @@ export default (sequelize: Sequelize) => {
     timestamps: false
   });
 
-  Wizard.associate = (models) => {
-    Wizard.hasMany(models.Group, { foreignKey: 'WizardID' });
-  };
-
   return Wizard;
+};
 };*/
