@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Familiar = sequelize.define('Familiar', {
     FamiliarID: {
       type: DataTypes.INTEGER,
@@ -7,6 +9,14 @@ module.exports = (sequelize, DataTypes) => {
     },
     GroupID: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+      // references: {
+      //   model: 'groups',
+      //   key: 'GroupID'
+      // }
+    },
+    img: {
+      type: DataTypes.STRING,
       allowNull: true
     },
     name: {
@@ -25,6 +35,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true
     },
+    pattern: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     personality: {
       type: DataTypes.STRING,
       allowNull: true
@@ -33,28 +47,26 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true
     },
-    pattern: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
     typing: {
-      type: DataTypes.STRING,
+      type: DataTypes.JSON,
       allowNull: true
     },
-    typing2: {
-      type: DataTypes.STRING,
-      allowNull: true
-    }
-
-  }, {
+  },
+  {
     tableName: 'familiars',
     timestamps: false
-  });
+  }
+);
 
-  Familiar.associate = (models) => {
-    Familiar.belongsTo(models.Group, { foreignKey: 'GroupID' });
-    Familiar.hasOne(models.Contract, { foreignKey: 'FamiliarID' });
-  };
+// NEW
+Familiar.associate = (models) => {
+  Familiar.belongsTo(models.Group, {
+    foreignKey: "GroupID"
+  })
+  Familiar.hasOne(models.Contract, {
+    foreingKey: "CustomerID"
+  })
+}
 
   return Familiar;
 };

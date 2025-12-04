@@ -4,8 +4,8 @@
     "module": "commonjs",
     "strict": false,
     "esModuleInterop": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "seeders/20251303130932-familiar-seeder.js"],
   "exclude": ["node_modules"]
 }
