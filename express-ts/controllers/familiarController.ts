@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
-import { Familiar } from '../types/index';
+import db from '../models/index.js';
+
+const { Familiar } = db;
 
 // Create a new familiar
 export const createFamiliar = async (req: Request, res: Response): Promise<void> => {
@@ -11,8 +13,7 @@ export const createFamiliar = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const newFamiliar: Familiar = {
-      FamiliarID: 0, // DB will generate
+    const familiar = await Familiar.create({
       GroupID,
       name,
       species: species || '',
@@ -23,11 +24,11 @@ export const createFamiliar = async (req: Request, res: Response): Promise<void>
       rarity: rarity || '',
       typing: typing || '',
       typing2: typing2 || null
-    };
+    });
 
-    // TODO: persist newFamiliar to DB
-    res.status(201).json({ message: 'Familiar created', familiar: newFamiliar });
+    res.status(201).json({ message: 'Familiar created', familiar });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error creating familiar' });
   }
 };
@@ -35,9 +36,10 @@ export const createFamiliar = async (req: Request, res: Response): Promise<void>
 // Get all familiars
 export const getAllFamiliars = async (_req: Request, res: Response): Promise<void> => {
   try {
-    // TODO: fetch familiars from DB
-    res.status(200).json({ familiars: [] });
+    const familiars = await Familiar.findAll();
+    res.status(200).json({ familiars });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error fetching familiars' });
   }
 };
@@ -45,15 +47,23 @@ export const getAllFamiliars = async (_req: Request, res: Response): Promise<voi
 // Get familiar by ID
 export const getFamiliarById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { FamiliarID } = req.params;
+    const FamiliarID = Number(req.params.FamiliarID);
+    
     if (!FamiliarID) {
       res.status(400).json({ error: 'FamiliarID is required' });
       return;
     }
 
-    // TODO: fetch familiar by id from DB
-    res.status(200).json({ familiar: null });
+    const familiar = await Familiar.findByPk(FamiliarID);
+
+    if (!familiar) {
+      res.status(404).json({ error: 'Familiar not found' });
+      return;
+    }
+
+    res.status(200).json({ familiar });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error fetching familiar' });
   }
 };
@@ -61,15 +71,20 @@ export const getFamiliarById = async (req: Request, res: Response): Promise<void
 // Get familiars by group
 export const getFamiliarsByGroup = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { GroupID } = req.params;
+    const GroupID = Number(req.params.GroupID);
+    
     if (!GroupID) {
       res.status(400).json({ error: 'GroupID is required' });
       return;
     }
 
-    // TODO: fetch familiars for GroupID from DB where Familiar.GroupID = GroupID
-    res.status(200).json({ familiars: [] });
+    const familiars = await Familiar.findAll({
+      where: { GroupID }
+    });
+
+    res.status(200).json({ familiars });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error fetching familiars by group' });
   }
 };
@@ -77,7 +92,7 @@ export const getFamiliarsByGroup = async (req: Request, res: Response): Promise<
 // Update familiar
 export const updateFamiliar = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { FamiliarID } = req.params;
+    const FamiliarID = Number(req.params.FamiliarID);
     const { name, GroupID, species, size, color, pattern, personality, rarity, typing, typing2 } = req.body;
 
     if (!FamiliarID) {
@@ -85,9 +100,29 @@ export const updateFamiliar = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // TODO: update familiar in DB
-    res.status(200).json({ message: 'Familiar updated' });
+    const familiar = await Familiar.findByPk(FamiliarID);
+
+    if (!familiar) {
+      res.status(404).json({ error: 'Familiar not found' });
+      return;
+    }
+
+    await familiar.update({
+      ...(name && { name }),
+      ...(GroupID !== undefined && { GroupID }),
+      ...(species !== undefined && { species }),
+      ...(size !== undefined && { size }),
+      ...(color !== undefined && { color }),
+      ...(pattern !== undefined && { pattern }),
+      ...(personality !== undefined && { personality }),
+      ...(rarity !== undefined && { rarity }),
+      ...(typing !== undefined && { typing }),
+      ...(typing2 !== undefined && { typing2 })
+    });
+
+    res.status(200).json({ message: 'Familiar updated', familiar });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error updating familiar' });
   }
 };
@@ -95,21 +130,31 @@ export const updateFamiliar = async (req: Request, res: Response): Promise<void>
 // Delete familiar
 export const deleteFamiliar = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { FamiliarID } = req.params;
+    const FamiliarID = Number(req.params.FamiliarID);
+    
     if (!FamiliarID) {
       res.status(400).json({ error: 'FamiliarID is required' });
       return;
     }
 
-    // TODO: remove familiar from DB
+    const familiar = await Familiar.findByPk(FamiliarID);
+
+    if (!familiar) {
+      res.status(404).json({ error: 'Familiar not found' });
+      return;
+    }
+
+    await familiar.destroy();
+
     res.status(200).json({ message: 'Familiar deleted' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error deleting familiar' });
   }
 };
 
-// Utility: simulate whether a familiar accepts a contract
-export const decideContract = (familiar: Familiar): boolean => {
+// decide contract function
+export const decideContract = (familiar: any): boolean => {
   // Random decision based on familiar personality or other traits
   return Math.random() > 0.5;
 };

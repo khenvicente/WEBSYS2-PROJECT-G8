@@ -38,23 +38,15 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'pending'
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
       }
     },
     {
       sequelize,
       tableName: 'contracts',
       timestamps: true,
-      underscored: true
+      underscored: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at'
     }
   );
 

@@ -1,120 +1,157 @@
 import { Request, Response } from 'express';
-import { Customer, Contract } from '../types/index';
+import db from '../models/index.js';
 
-// Temporary in-memory store for quick testing — replace with DB/model calls.
-const customers: Customer[] = [];
-let nextCustomerID = 1;
+const { Customer } = db;
 
-// Create a new customer
+// ----------------------------------------------
+// CREATE CUSTOMER
+// ----------------------------------------------
 export const createCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, GroupID, email } = req.body;
+    const { name, GroupID } = req.body;
+
     if (!name) {
       res.status(400).json({ error: 'name is required' });
       return;
     }
 
-    // Replace with DB insert (Sequelize create) that returns the CustomerID
-    const newCustomer: Customer = {
-      CustomerID: nextCustomerID++,
+    const customer = await Customer.create({
       name,
-      GroupID: GroupID ?? null,
-      email: email ?? ''
-    };
-    customers.push(newCustomer);
+      GroupID: GroupID ?? null
+    });
 
-    res.status(201).json({ message: 'Customer created', customer: newCustomer });
+    res.status(201).json({
+      message: 'Customer created',
+      customer
+    });
+
   } catch (error) {
     res.status(500).json({ error: 'Error creating customer' });
   }
 };
 
-// Get all customers
+// ----------------------------------------------
+// GET ALL CUSTOMERS
+// ----------------------------------------------
 export const getAllCustomers = async (_req: Request, res: Response): Promise<void> => {
   try {
-    // TODO: replace with DB query
+    const customers = await Customer.findAll();
     res.status(200).json({ customers });
+
   } catch (error) {
     res.status(500).json({ error: 'Error fetching customers' });
   }
 };
 
-// Get customer by ID
+// ----------------------------------------------
+// GET CUSTOMER BY ID
+// ----------------------------------------------
 export const getCustomerById = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.customerId);
+
     if (!id) {
       res.status(400).json({ error: 'customerId is required' });
       return;
     }
 
-    // TODO: replace with DB query (findByPk)
-    const customer = customers.find(c => c.CustomerID === id) ?? null;
+    const customer = await Customer.findByPk(id);
+
+    if (!customer) {
+      res.status(404).json({ error: 'Customer not found' });
+      return;
+    }
+
     res.status(200).json({ customer });
+
   } catch (error) {
     res.status(500).json({ error: 'Error fetching customer' });
   }
 };
 
-// Get customer's contracts
+// ----------------------------------------------
+// GET CUSTOMER CONTRACTS
+// ----------------------------------------------
 export const getCustomerContracts = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.customerId);
+
     if (!id) {
       res.status(400).json({ error: 'customerId is required' });
       return;
     }
 
-    // TODO: query contracts by CustomerID via DB/models
-    const contracts: Contract[] = []; // placeholder
+    // If you have Contract model and associations set up:
+    const { Contract } = db;
+    const contracts = await Contract.findAll({
+      where: { CustomerID: id }
+    });
+
     res.status(200).json({ contracts });
+
   } catch (error) {
     res.status(500).json({ error: 'Error fetching contracts' });
   }
 };
 
-// Update customer
+// ----------------------------------------------
+// UPDATE CUSTOMER
+// ----------------------------------------------
 export const updateCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.customerId);
-    const { name, GroupID, email } = req.body;
+    const { name, GroupID } = req.body;
+
     if (!id) {
       res.status(400).json({ error: 'customerId is required' });
       return;
     }
 
-    // TODO: replace with DB update (return updated row)
-    const idx = customers.findIndex(c => c.CustomerID === id);
-    if (idx === -1) {
+    const customer = await Customer.findByPk(id);
+
+    if (!customer) {
       res.status(404).json({ error: 'Customer not found' });
       return;
     }
-    customers[idx] = { ...customers[idx], name: name ?? customers[idx].name, GroupID: GroupID ?? customers[idx].GroupID, email: email ?? customers[idx].email };
 
-    res.status(200).json({ message: 'Customer updated', customer: customers[idx] });
+    await customer.update({
+      ...(name && { name }),
+      ...(GroupID !== undefined && { GroupID })
+    });
+
+    res.status(200).json({
+      message: 'Customer updated',
+      customer
+    });
+
   } catch (error) {
     res.status(500).json({ error: 'Error updating customer' });
   }
 };
 
-// Delete customer
+// ----------------------------------------------
+// DELETE CUSTOMER
+// ----------------------------------------------
 export const deleteCustomer = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Number(req.params.customerId);
+
     if (!id) {
       res.status(400).json({ error: 'customerId is required' });
       return;
     }
 
-    // TODO: replace with DB delete
-    const idx = customers.findIndex(c => c.CustomerID === id);
-    if (idx === -1) {
+    const customer = await Customer.findByPk(id);
+
+    if (!customer) {
       res.status(404).json({ error: 'Customer not found' });
       return;
     }
-    customers.splice(idx, 1);
+
+    await customer.destroy();
 
     res.status(200).json({ message: 'Customer deleted' });
+
   } catch (error) {
     res.status(500).json({ error: 'Error deleting customer' });
   }

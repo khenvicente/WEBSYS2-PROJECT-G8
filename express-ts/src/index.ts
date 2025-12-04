@@ -5,6 +5,12 @@ import familiarRoutes from '../routes/familiarRoutes';
 import groupRoutes from '../routes/groupRoutes';
 import wizardRoutes from '../routes/wizardRoutes';
 import contractRoutes from '../routes/contractRoutes';
+<<<<<<< Updated upstream
+=======
+import cors from "cors";
+import dotenv from 'dotenv';
+dotenv.config();
+>>>>>>> Stashed changes
 
 const app = express();
 const PORT = process.env.PORT || 4200;
