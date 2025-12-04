@@ -21,3 +21,14 @@
     "dialect": "mysql"
   }
 }
+
+/*
+development: {
+  "username": "postgres.<project_id>",
+  "password": <password_to_db>",
+  "database": "postgres",
+  "host": "<server>.pooler.supabase.com",
+  "dialect": "postgres",
+  "port": 5342
+}*/
+

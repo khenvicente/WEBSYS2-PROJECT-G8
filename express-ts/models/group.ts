@@ -1,7 +1,7 @@
-import { DataTypes, Model, Sequelize } from 'sequelize';
+import { DataTypes, Model, Sequelize, Optional } from 'sequelize';
 
-export interface FamiliarGroupAttributes {
-  GroupID?: number;
+export interface GroupAttributes {
+  GroupID: number;
   WizardID: number;
   price?: number | null;
   species_type?: string | null;
@@ -14,22 +14,24 @@ export interface FamiliarGroupAttributes {
   secondary_typing?: string | null;
 }
 
-export class FamiliarGroup extends Model<FamiliarGroupAttributes> implements FamiliarGroupAttributes {
+interface GroupCreationAttributes extends Optional<GroupAttributes, GroupCreationAttributes, 'GroupID'> {}
+
+class Group extends Model<GroupAttributes> implements GroupAttributes {
   public GroupID!: number;
   public WizardID!: number;
-  public price?: number | null;
-  public species_type?: string | null;
-  public size_range?: string | null;
-  public color_theme?: string | null;
-  public pattern_type?: string | null;
-  public personality_type?: string | null;
-  public rarity_tier?: string | null;
-  public primary_typing?: string | null;
-  public secondary_typing?: string | null;
+  public price!: number | null;
+  public species_type!: string | null;
+  public size_range!: string | null;
+  public color_theme!: string | null;
+  public pattern_type!: string | null;
+  public personality_type!: string | null;
+  public rarity_tier!: string | null;
+  public primary_typing!: string | null;
+  public secondary_typing!: string | null;
 }
 
 export default (sequelize: Sequelize) => {
-  FamiliarGroup.init(
+  Group.init(
     {
       GroupID: {
         type: DataTypes.INTEGER,
@@ -88,7 +90,7 @@ export default (sequelize: Sequelize) => {
     }
   );
 
-  return FamiliarGroup;
+  return Group;
 };
 /*module.exports = (sequelize, DataTypes) => {
   const Group = sequelize.define('Group', {
