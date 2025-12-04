@@ -6,11 +6,16 @@ module.exports = {
       WizardID: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        allowNull: false
       },
       name: {
         type: Sequelize.STRING,
         allowNull: false
+      },
+      img: {
+        type: Sequelize.STRING,
+        allowNull: true
       }
     });
   },

@@ -6,7 +6,8 @@ module.exports = {
       GroupID: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        allowNull: false
       },
       WizardID: {
         type: Sequelize.INTEGER,
@@ -22,31 +23,38 @@ module.exports = {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: true
       },
-      species: {
+      species_type: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      size: {
+      size_range: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      color: {
+      color_theme: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      pattern: {
+      pattern_type: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      personality: {
+      personality_type: {
         type: Sequelize.STRING,
         allowNull: true
       },
-      rarity: {
+      rarity_tier: {
         type: Sequelize.STRING,
         allowNull: true
-      }
+      },
+      typing: {
+        type: Sequelize.JSON,
+        allowNull: true
+      },
     });
+
+    // Add index on foreign key
+    await queryInterface.addIndex('groups', ['WizardID']);
   },
 
   down: async (queryInterface, Sequelize) => {
