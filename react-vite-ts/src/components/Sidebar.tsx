@@ -3,7 +3,7 @@ import {
   HomeIcon,
   UsersIcon,
   PuzzlePieceIcon,
-  AcademicCapIcon,
+  // AcademicCapIcon,
   ClipboardDocumentListIcon,
 } from "@heroicons/react/24/solid";
 
@@ -16,7 +16,7 @@ export default function Sidebar() {
     { name: "Customers", path: "/customers", icon: UsersIcon },
     { name: "Familiars", path: "/familiars", icon: PuzzlePieceIcon },
     { name: "Groups", path: "/groups", icon: ClipboardDocumentListIcon },
-    { name: "Wizards", path: "/wizards", icon: AcademicCapIcon },
+    // { name: "Wizards", path: "/wizards", icon: AcademicCapIcon },
     { name: "Contracts", path: "/contracts", icon: ClipboardDocumentListIcon },
   ];
 

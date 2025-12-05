@@ -53,7 +53,8 @@ module.exports = {
       },
       typing: {
         type: Sequelize.JSON,
-        allowNull: true
+        allowNull: true,
+        defaultValue: []
       },
     });
 

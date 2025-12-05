@@ -19,8 +19,8 @@ export function useFamiliar() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch ALL
-  const getFamiliars = async () => {
+  // Fetch ALL Familiars
+  const getAllFamiliars = async () => {
     setLoading(true)
     try {
       const res = await api.get("/api/familiars")
@@ -34,24 +34,11 @@ export function useFamiliar() {
     }
   }
 
-  // Fetch ONE by ID
-  const getFamiliar = async (id: number): Promise<Familiar | null> => {
-    try {
-      const res = await api.get(`/api/familiars/${id}`)
-      return res.data
-    } catch (err: any) {
-      console.error(err)
-      setError(err.response?.data?.error || err.message || "Unknown error")
-      return null
-    }
-  }
-
   // Create Familiar
   const createFamiliar = async (payload: Omit<Familiar, "FamiliarID">) => {
     try {
       const res = await api.post("/api/familiars", payload)
-      // Optional: refresh list after adding
-      await getFamiliars()
+      await getAllFamiliars()
       return res.data
     } catch (err: any) {
       console.error(err)
@@ -60,17 +47,44 @@ export function useFamiliar() {
     }
   }
 
-  // load on mount
+  // Edit Familiar (by ID)
+  const editFamiliar = async (id: number, payload: Partial<Familiar>) => {
+    try {
+      const res = await api.put(`/api/familiars/${id}`, payload)
+      await getAllFamiliars()
+      return res.data
+    } catch (err: any) {
+      console.error(err)
+      setError(err.response?.data?.error || err.message || "Unknown error")
+      throw err
+    }
+  }
+
+  // Delete Familiar (by ID)
+  const deleteFamiliar = async (id: number) => {
+    try {
+      const res = await api.delete(`/api/familiars/${id}`)
+      await getAllFamiliars()
+      return res.data
+    } catch (err: any) {
+      console.error(err)
+      setError(err.response?.data?.error || err.message || "Unknown error")
+      throw err
+    }
+  }
+
+  // Load on mount
   useEffect(() => {
-    getFamiliars()
+    getAllFamiliars()
   }, [])
 
   return {
     data,
     loading,
     error,
-    getFamiliars,
-    getFamiliar,
+    getAllFamiliars,
     createFamiliar,
+    editFamiliar,
+    deleteFamiliar,
   }
 }

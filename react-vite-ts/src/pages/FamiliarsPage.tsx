@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useFamiliar } from "../hooks/useFamiliar";
-import { PlusIcon, TrashIcon, PencilIcon, FunnelIcon } from "@heroicons/react/24/solid";
+import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/solid";
 
 export default function FamiliarsPage() {
   const { data, loading, error, createFamiliar } = useFamiliar();
