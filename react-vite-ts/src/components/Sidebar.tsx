@@ -3,7 +3,6 @@ import {
   HomeIcon,
   UsersIcon,
   PuzzlePieceIcon,
-  // AcademicCapIcon,
   ClipboardDocumentListIcon,
 } from "@heroicons/react/24/solid";
 
@@ -21,7 +20,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="w-64 h-screen bg-gradient-to-b from-purple-700 to-purple-600 text-white flex flex-col p-6 shadow-lg">
+    <div className="w-64 h-screen bg-linear-to-b from-purple-700 to-purple-600 text-white flex flex-col p-6 shadow-lg">
       <h1 className="text-3xl font-extrabold mb-10 tracking-wide">
         Admin Panel
       </h1>

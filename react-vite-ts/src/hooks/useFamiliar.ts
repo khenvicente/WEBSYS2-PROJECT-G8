@@ -19,7 +19,6 @@ export function useFamiliar() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch ALL Familiars
   const getAllFamiliars = async () => {
     setLoading(true)
     try {
@@ -34,7 +33,6 @@ export function useFamiliar() {
     }
   }
 
-  // Create Familiar
   const createFamiliar = async (payload: Omit<Familiar, "FamiliarID">) => {
     try {
       const res = await api.post("/api/familiars", payload)
@@ -47,7 +45,6 @@ export function useFamiliar() {
     }
   }
 
-  // Edit Familiar (by ID)
   const editFamiliar = async (id: number, payload: Partial<Familiar>) => {
     try {
       const res = await api.put(`/api/familiars/${id}`, payload)
@@ -60,7 +57,6 @@ export function useFamiliar() {
     }
   }
 
-  // Delete Familiar (by ID)
   const deleteFamiliar = async (id: number) => {
     try {
       const res = await api.delete(`/api/familiars/${id}`)
@@ -73,18 +69,9 @@ export function useFamiliar() {
     }
   }
 
-  // Load on mount
   useEffect(() => {
     getAllFamiliars()
   }, [])
 
-  return {
-    data,
-    loading,
-    error,
-    getAllFamiliars,
-    createFamiliar,
-    editFamiliar,
-    deleteFamiliar,
-  }
+  return { data, loading, error, getAllFamiliars, createFamiliar, editFamiliar, deleteFamiliar }
 }
