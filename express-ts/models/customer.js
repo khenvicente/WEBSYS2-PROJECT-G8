@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Customer = sequelize.define('Customer', {
     CustomerID: {
       type: DataTypes.INTEGER,
@@ -7,21 +9,36 @@ module.exports = (sequelize, DataTypes) => {
     },
     GroupID: {
       type: DataTypes.INTEGER,
-      allowNull: true
+      allowNull: true,
+      // references: {
+      //   model: 'groups',
+      //   key: 'GroupID'
+      // }
     },
     name: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    img: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
-  }, {
+  },
+  {
     tableName: 'customers',
     timestamps: false
-  });
+  }
+);
 
-  Customer.associate = (models) => {
-    Customer.belongsTo(models.Group, { foreignKey: 'GroupID' });
-    Customer.hasOne(models.Contract, { foreignKey: 'CustomerID' });
-  };
+// NEW
+Customer.associate = (models) => {
+  Customer.belongsTo(models.Group, {
+    foreignKey: "GroupID"
+  })
+  Customer.hasOne(models.Contract, {
+    foreignKey: "CustomerID"
+  })
+}
 
   return Customer;
 };
