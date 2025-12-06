@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Group = sequelize.define('Group', {
     GroupID: {
       type: DataTypes.INTEGER,
@@ -7,46 +9,63 @@ module.exports = (sequelize, DataTypes) => {
     },
     WizardID: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'wizards',
+        key: 'WizardID'
+      }
     },
     price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true
     },
-    species: {
+    species_type: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    size: {
+    size_range: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    color: {
+    color_theme: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    pattern: {
+    pattern_type: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    personality: {
+    personality_type: {
       type: DataTypes.STRING,
       allowNull: true
     },
-    rarity: {
+    rarity_tier: {
       type: DataTypes.STRING,
+      allowNull: true
+    },
+    typing: {
+      type: DataTypes.JSON,
       allowNull: true
     }
-  }, {
+  },
+  {
     tableName: 'groups',
     timestamps: false
-  });
+  }
+);
 
-  Group.associate = (models) => {
-    Group.belongsTo(models.Wizard, { foreignKey: 'WizardID' });
-    Group.hasMany(models.Familiar, { foreignKey: 'GroupID' });
-    Group.hasMany(models.Customer, { foreignKey: 'GroupID' });
-  };
+// NEW
+Group.associate = (models) => {
+  Group.belongsTo(models.Wizard, {
+    foreignKey: "WizardID"
+  })
+  Group.hasMany(models.Familiar, {
+    foreignKey: "GroupID"
+  })
+  Group.hasMany(models.Customer, {
+    foreignKey: "GroupID"
+  })
+}
 
   return Group;
 };

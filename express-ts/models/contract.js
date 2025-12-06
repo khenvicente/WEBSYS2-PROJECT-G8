@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Contract = sequelize.define('Contract', {
     ContractID: {
       type: DataTypes.INTEGER,
@@ -8,26 +10,61 @@ module.exports = (sequelize, DataTypes) => {
     CustomerID: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true
+      // references: {
+      //   model: 'customers',
+      //   key: 'CustomerID'
+      // }
     },
     FamiliarID: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true
+      // references: {
+      //   model: 'familiars',
+      //   key: 'FamiliarID'
+      // }
     },
     status: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    // createdAt: {
+    //   type: DataTypes.DATE,
+    //   allowNull: false,
+    //   defaultValue: DataTypes.NOW
+    // },
+    // updatedAt: {
+    //   type: DataTypes.DATE,
+    //   allowNull: false,
+    //   defaultValue: DataTypes.NOW
+    // }
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
     }
-  }, {
+  },
+  {
     tableName: 'contracts',
-    timestamps: false
-  });
+    timestamps: true,
+    // createdAt: 'created_at',
+    // updatedAt: 'updated_at'
+  }
+);
 
-  Contract.associate = (models) => {
-    Contract.belongsTo(models.Customer, { foreignKey: 'CustomerID' });
-    Contract.belongsTo(models.Familiar, { foreignKey: 'FamiliarID' });
-  };
+// NEW 
+Contract.associate = (models) => {
+  Contract.belongsTo(models.Customer, {
+    foreignKey: "CustomerID"
+  })
+  Contract.belongsto(models.Familiar, {
+    foreignKey: "FamiliarID"
+  })
+}
 
   return Contract;
 };
