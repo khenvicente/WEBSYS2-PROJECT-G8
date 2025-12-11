@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { customerQueries, contractQueries } from '../db/queries';
+import { Customer, Contract } from '../models';
 
 // Get all customers
 export const getAllCustomers = async (_req: Request, res: Response) => {
   try {
-    const customers = await customerQueries.findAll();
+    const customers = await Customer.findAll();
     res.status(200).json({ customers });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -15,10 +15,11 @@ export const getAllCustomers = async (_req: Request, res: Response) => {
 export const getCustomerById = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.CustomerID);
-    const customer = await customerQueries.findById(id);
+    const customer = await Customer.findByPk(id);
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
     res.status(200).json({ customer });
   } catch (error) {
-    res.status(404).json({ error: 'Customer not found' });
+    res.status(500).json({ error: (error as Error).message });
   }
 };
 
@@ -26,7 +27,7 @@ export const getCustomerById = async (req: Request, res: Response) => {
 export const getCustomerContracts = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.CustomerID);
-    const contracts = await contractQueries.findByCustomer(id);
+    const contracts = await Contract.findAll({ where: { CustomerID: id } });
     res.status(200).json({ contracts });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -39,20 +40,10 @@ export const updateCustomer = async (req: Request, res: Response) => {
     const id = Number(req.params.CustomerID);
     const { name, GroupID, img } = req.body;
 
-    // Check if customer exists first
-    try {
-      await customerQueries.findById(id);
-    } catch (err) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    const customer = await Customer.findByPk(id);
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-    // Build update object with only provided fields
-    const updates: any = {};
-    if (name !== undefined) updates.name = name;
-    if (GroupID !== undefined) updates.GroupID = GroupID;
-    if (img !== undefined) updates.image = img;
-
-    const customer = await customerQueries.update(id, updates);
+    await customer.update({ name: name ?? customer.name, GroupID: GroupID ?? customer.GroupID, image: img ?? customer.image });
     res.status(200).json({ message: 'Customer updated', customer });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -63,15 +54,10 @@ export const updateCustomer = async (req: Request, res: Response) => {
 export const deleteCustomer = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.CustomerID);
-    
-    // Check if customer exists first
-    try {
-      await customerQueries.findById(id);
-    } catch (err) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    const customer = await Customer.findByPk(id);
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-    await customerQueries.delete(id);
+    await customer.destroy();
     res.status(200).json({ message: 'Customer deleted' });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { wizardQueries, customerQueries } from "../db/queries";
+import { Wizard, Customer } from "../models";
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -10,51 +10,40 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email, password, and role are required" });
     }
 
-    if (role !== "wizard" && role !== "customer") {
-      return res.status(400).json({ message: "Invalid role" });
-    }
+    const existingUser =
+      role === "wizard"
+        ? await Wizard.findOne({ where: { email } })
+        : role === "customer"
+        ? await Customer.findOne({ where: { email } })
+        : null;
 
-    // Check if user already exists
-    let existingUser = null;
-    try {
-      if (role === "wizard") {
-        existingUser = await wizardQueries.findByEmail(email);
-      } else {
-        existingUser = await customerQueries.findByEmail(email);
-      }
-    } catch (err) {
-      // User not found - this is good, we can proceed
-      existingUser = null;
+    if (!existingUser && role !== "wizard" && role !== "customer") {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     if (existingUser) {
       return res.status(400).json({ message: `${role} with this email already exists` });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser =
+      role === "wizard"
+        ? await Wizard.create({
+            email,
+            password: hashedPassword,
+            username: username,
+            name: name || "Unnamed Wizard",
+            role,
+          })
+        : await Customer.create({
+            email,
+            password: hashedPassword,
+            username: username,
+            name: name || "Unnamed Customer",
+            role,
+          });
 
-    // Create new user
-    const newUser = role === "wizard"
-      ? await wizardQueries.create({
-          email,
-          password: hashedPassword,
-          username: username,
-          name: name || "Unnamed Wizard",
-          role,
-        })
-      : await customerQueries.create({
-          email,
-          password: hashedPassword,
-          username: username,
-          name: name || "Unnamed Customer",
-          role,
-        });
-
-    // Remove password from response
-    const { password: _, ...safeUser } = newUser;
-
-    return res.status(201).json({ message: "Registration successful", user: safeUser });
+    return res.status(201).json({ message: "Registration successful", user: newUser });
 
   } catch (err) {
     console.error(err);
@@ -70,37 +59,25 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    let user: any = null;
+    let user: any = await Wizard.findOne({ where: { email } });
     let role = "wizard";
 
-    // Try to find wizard first
-    try {
-      user = await wizardQueries.findByEmail(email);
-      role = "wizard";
-    } catch (err) {
-      // Not a wizard, try customer
-      try {
-        user = await customerQueries.findByEmail(email);
-        role = "customer";
-      } catch (err) {
-        // User not found
-        user = null;
-      }
+    if (!user) {
+      user = await Customer.findOne({ where: { email } });
+      role = "customer";
     }
 
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Compare password
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Return safe user data (without password)
     const safeUser = {
-      id: role === "wizard" ? user.WizardID : user.CustomerID,
+      id: user.id,
       email: user.email,
       username: user.username,
       name: user.name,

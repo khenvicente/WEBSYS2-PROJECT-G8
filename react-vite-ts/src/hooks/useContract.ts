@@ -9,19 +9,8 @@ interface Contract {
   status: string;
   created_at: string;
   updated_at: string;
-  customers?: {
-    CustomerID: number;
-    name: string;
-    email: string;
-    image?: string;
-  };
-  familiars?: {
-    FamiliarID: number;
-    name: string;
-    species?: string;
-    image?: string;
-    rarity?: string;
-  };
+  Customer?: any;
+  Familiar?: any;
 }
 
 export function useContract() {
@@ -32,12 +21,11 @@ export function useContract() {
   async function fetchContracts() {
     try {
       setLoading(true);
-      setError(null);
-      const res = await api.get('/contracts'); 
+      const res = await api.get('/api/contracts');
       setContracts(res.data);
+      setLoading(false);
     } catch (err: any) {
       setError('Failed to fetch contracts');
-    } finally {
       setLoading(false);
     }
   }
@@ -45,15 +33,12 @@ export function useContract() {
   async function createContract(customerId: number) {
     try {
       setLoading(true);
-      setError(null);
-      const res = await api.post('/contracts', { customerId }); 
-      await fetchContracts(); 
+      const res = await api.post('/api/contracts', { customerId });
+      await fetchContracts(); // refresh
+      setLoading(false);
       return res.data;
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Failed to create contract';
-      setError(msg);
-      throw new Error(msg); 
-    } finally {
+      setError(err.response?.data?.message || 'Failed to create contract');
       setLoading(false);
     }
   }

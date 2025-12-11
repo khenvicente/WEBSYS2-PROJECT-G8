@@ -1,126 +1,86 @@
-import { useState, useEffect } from 'react';
-import { api } from '../api/axiosClient';
+import { useEffect, useState } from "react"
+import { api } from "../api/axiosClient"
 
-export interface Familiar {  
-  FamiliarID: number;
-  GroupID?: number;
-  image?: string;
-  name: string;
-  species?: string;
-  size?: string;
-  color?: string;
-  pattern?: string;
-  personality?: string;
-  rarity?: string;
-  typing?: any;
+export interface Familiar {
+  FamiliarID: number
+  GroupID?: number
+  name: string
+  image?: string
+  species?: string
+  size?: string
+  color?: string
+  pattern?: string
+  personality?: string
+  rarity?: string
+  typing?: string[]
 }
 
 export function useFamiliar() {
-  const [familiars, setFamiliars] = useState<Familiar[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<Familiar[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  async function fetchFamiliars() {
+  const getAllFamiliars = async () => {
+    setLoading(true)
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get('/familiars');
-      setFamiliars(res.data);
+      const res = await api.get("/api/familiars")
+      setData(res.data)
+      setError(null)
     } catch (err: any) {
-      setError('Failed to fetch familiars');
+      console.error(err)
+      setError(err.response?.data?.error || err.message || "Unknown error")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
-  async function fetchFamiliarById(id: number) {
+  const createFamiliar = async (payload: Omit<Familiar, "FamiliarID">) => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get(`/familiars/${id}`);
-      return res.data;
+      const res = await api.post("/api/familiars", payload)
+      await getAllFamiliars()
+      return res.data
     } catch (err: any) {
-      setError('Failed to fetch familiar');
-      return null;
-    } finally {
-      setLoading(false);
+      console.error(err)
+      setError(err.response?.data?.error || err.message || "Unknown error")
+      throw err
     }
   }
 
-  async function createFamiliar(data: Omit<Familiar, 'FamiliarID'>) {
+  const editFamiliar = async (id: number, payload: Partial<Familiar>) => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.post('/familiars', data);
-      await fetchFamiliars();
-      return res.data;
+      const res = await api.put(`/api/familiars/${id}`, payload)
+      await getAllFamiliars()
+      return res.data
     } catch (err: any) {
-      const msg = err.response?.data?.error || 'Failed to create familiar';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
+      console.error(err)
+      setError(err.response?.data?.error || err.message || "Unknown error")
+      throw err
     }
   }
 
-  async function updateFamiliar(id: number, data: Partial<Familiar>) {
+  const deleteFamiliar = async (id: number) => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.put(`/familiars/${id}`, data);
-      await fetchFamiliars();
-      return res.data;
+      const res = await api.delete(`/api/familiars/${id}`)
+      await getAllFamiliars()
+      return res.data
     } catch (err: any) {
-      const msg = err.response?.data?.error || 'Failed to update familiar';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function deleteFamiliar(id: number) {
-    try {
-      setLoading(true);
-      setError(null);
-      await api.delete(`/familiars/${id}`);
-      await fetchFamiliars();
-    } catch (err: any) {
-      const msg = err.response?.data?.error || 'Failed to delete familiar';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchFamiliarsByGroup(groupId: number) {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get(`/familiars/group/${groupId}`);
-      return res.data;
-    } catch (err: any) {
-      setError('Failed to fetch familiars by group');
-      return [];
-    } finally {
-      setLoading(false);
+      console.error(err)
+      setError(err.response?.data?.error || err.message || "Unknown error")
+      throw err
     }
   }
 
   useEffect(() => {
-    fetchFamiliars();
-  }, []);
+    getAllFamiliars()
+  }, [])
 
   return {
-    familiars,
+    data,
     loading,
     error,
-    fetchFamiliarById,
+    getAllFamiliars,
     createFamiliar,
-    updateFamiliar,
-    deleteFamiliar,
-    fetchFamiliarsByGroup,
-    refresh: fetchFamiliars
-  };
+    editFamiliar,
+    deleteFamiliar
+  }
 }
