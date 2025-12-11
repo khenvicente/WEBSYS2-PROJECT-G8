@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "websys2",
+    "password": "websys2",
+    "database": "famili_dev",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "websys2",
+    "password": "websys2",
+    "database": "famili_test",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "websys2",
+    "password": "websys2",
+    "database": "famili_prod",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "outDir": "./dist",
+  },
+  "include": ["src/**/*", "seeders/20251303130932-familiar-seeder.js", "types"],
+  "exclude": ["node_modules"]
+}
