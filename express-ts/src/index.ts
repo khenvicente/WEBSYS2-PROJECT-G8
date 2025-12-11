@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import express from 'express';
+import { sequelize } from './models';
 import customerRoutes from './routes/customerRoutes';
 import familiarRoutes from './routes/familiarRoutes';
 import groupRoutes from './routes/groupRoutes';
@@ -9,14 +7,12 @@ import wizardRoutes from './routes/wizardRoutes';
 import contractRoutes from './routes/contractRoutes';
 import authRoutes from './routes/authRoutes';
 import cors from "cors";
-import { supabase } from './db/supabase';
 
 const app = express();
 const PORT = process.env.PORT || 4200;
 
-// FIX: Allow requests from frontend
 app.use(cors({
-  origin: ["http://localhost:5173", "https://websys2-project-g8-mm7i.onrender.com"],
+  origin: "https://websys2-project-g8-mm7i.onrender.com",
   credentials: true
 }));
 
@@ -39,22 +35,16 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const startServer = async () => {
-  try {
-    const { data, error } = await supabase.from('wizards').select('count');
-    
-    if (error) {
-      console.error("Supabase connection failed:", error);
-    } else {
-      console.log("Supabase connected successfully!");
-    }
-  } catch (err) {
-    console.error("Failed to connect to Supabase:", err);
-  } finally {
+sequelize.authenticate()
+  .then(() => {
+    console.log("Database connected!");
+    return sequelize.sync();
+  })
+  .catch((err: any) => {
+    console.error("Database connection failed:", err);
+  })
+  .finally(() => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-  }
-};
-
-startServer();
+  });

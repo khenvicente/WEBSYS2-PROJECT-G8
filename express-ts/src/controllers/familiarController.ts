@@ -1,9 +1,9 @@
 import { Request, Response } from 'express'
-import { familiarQueries } from '../db/queries'
+import { Familiar } from "../models"
 
 export const createFamiliar = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, image, species, size, color, pattern, personality, rarity, typing, GroupID } = req.body
+    const { name, image, species, size, color, pattern, personality, rarity, typing } = req.body
 
     if (!name) {
       res.status(400).json({ error: "Name is required" })
@@ -16,20 +16,18 @@ export const createFamiliar = async (req: Request, res: Response): Promise<void>
         ? typing.split(",").map((t) => t.trim())
         : []
 
-    const newFamiliar = await familiarQueries.create({
+    const newFamiliar = await Familiar.create({
       name,
-      image: image || undefined,
-      species: species || undefined,
-      size: size || undefined,
-      color: color || undefined,
-      pattern: pattern || undefined,
-      personality: personality || undefined,
-      rarity: rarity || undefined,
-      typing: normalizedTyping.length > 0 ? normalizedTyping : undefined,
-      GroupID: GroupID || undefined,
+      image: image || null,
+      species: species || null,
+      size: size || null,
+      color: color || null,
+      pattern: pattern || null,
+      personality: personality || null,
+      rarity: rarity || null,
+      typing: normalizedTyping || null,
     })
-    
-    console.log("Received typing:", typing)
+    console.log("Received typing:", typing);
     res.status(201).json(newFamiliar)
   } catch (err) {
     console.error("Error creating familiar:", err)
@@ -39,7 +37,7 @@ export const createFamiliar = async (req: Request, res: Response): Promise<void>
 
 export const getAllFamiliars = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const familiars = await familiarQueries.findAll()
+    const familiars = await Familiar.findAll()
     res.status(200).json(familiars)
   } catch (err) {
     console.error("Error fetching familiars:", err)
@@ -55,11 +53,16 @@ export const getFamiliarById = async (req: Request, res: Response): Promise<void
       return
     }
 
-    const familiar = await familiarQueries.findById(Number(FamiliarID))
+    const familiar = await Familiar.findByPk(FamiliarID)
+    if (!familiar) {
+      res.status(404).json({ error: "Familiar not found" })
+      return
+    }
+
     res.status(200).json(familiar)
   } catch (err) {
     console.error("Error fetching familiar:", err)
-    res.status(404).json({ error: "Familiar not found" })
+    res.status(500).json({ error: "Error fetching familiar" })
   }
 }
 
@@ -73,10 +76,8 @@ export const updateFamiliar = async (req: Request, res: Response): Promise<void>
       return
     }
 
-    // Check if familiar exists
-    try {
-      await familiarQueries.findById(Number(FamiliarID))
-    } catch (err) {
+    const familiar = await Familiar.findByPk(FamiliarID)
+    if (!familiar) {
       res.status(404).json({ error: "Familiar not found" })
       return
     }
@@ -87,8 +88,8 @@ export const updateFamiliar = async (req: Request, res: Response): Promise<void>
         : updates.typing.split(",").map((t: string) => t.trim())
     }
 
-    const updatedFamiliar = await familiarQueries.update(Number(FamiliarID), updates)
-    res.status(200).json(updatedFamiliar)
+    await familiar.update(updates)
+    res.status(200).json(familiar)
   } catch (err) {
     console.error("Error updating familiar:", err)
     res.status(500).json({ error: "Error updating familiar" })
@@ -103,15 +104,13 @@ export const deleteFamiliar = async (req: Request, res: Response): Promise<void>
       return
     }
 
-    // Check if familiar exists
-    try {
-      await familiarQueries.findById(Number(FamiliarID))
-    } catch (err) {
+    const familiar = await Familiar.findByPk(FamiliarID)
+    if (!familiar) {
       res.status(404).json({ error: "Familiar not found" })
       return
     }
 
-    await familiarQueries.delete(Number(FamiliarID))
+    await familiar.destroy()
     res.status(200).json({ message: "Familiar deleted" })
   } catch (err) {
     console.error("Error deleting familiar:", err)
@@ -127,7 +126,9 @@ export const getFamiliarsByGroup = async (req: Request, res: Response): Promise<
       return
     }
 
-    const familiars = await familiarQueries.findByGroup(Number(GroupID))
+    const familiars = await Familiar.findAll({
+      where: { GroupID }
+    })
     res.status(200).json(familiars)
   } catch (err) {
     console.error("Error fetching familiars by group:", err)

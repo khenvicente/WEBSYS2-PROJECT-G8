@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api/axiosClient';
 
-interface Customer {
+export interface Customer {
   CustomerID: number;
-  GroupID?: number;
   name: string;
+  GroupID?: number;
   image?: string;
-  email: string;
-  username: string;
-  role: string;
 }
 
 export function useCustomer() {
@@ -16,63 +13,57 @@ export function useCustomer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchCustomers() {
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get('/customers');
+      const res = await api.get('/api/customers');
       setCustomers(res.data.customers);
-    } catch (err: any) {
-      setError('Failed to fetch customers');
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function fetchCustomerById(id: number) {
+  const createCustomer = async (customer: { name: string; GroupID?: number; image?: string }) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get(`/customers/${id}`);
-      return res.data.customer;
-    } catch (err: any) {
-      setError('Failed to fetch customer');
-      return null;
+      await api.post('/api/customers', customer);
+      await fetchCustomers();
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function updateCustomer(id: number, data: Partial<Customer>) {
+  const updateCustomer = async (CustomerID: number, customer: { name?: string; GroupID?: number; image?: string }) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const res = await api.put(`/customers/${id}`, data);
-      await fetchCustomers(); 
-      return res.data.customer;
-    } catch (err: any) {
-      const msg = err.response?.data?.error || 'Failed to update customer';
-      setError(msg);
-      throw new Error(msg);
+      await api.put(`/api/customers/${CustomerID}`, customer);
+      await fetchCustomers();
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function deleteCustomer(id: number) {
+  const deleteCustomer = async (CustomerID: number) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      await api.delete(`/customers/${id}`);
-      await fetchCustomers(); 
-    } catch (err: any) {
-      const msg = err.response?.data?.error || 'Failed to delete customer';
-      setError(msg);
-      throw new Error(msg);
+      await api.delete(`/api/customers/${CustomerID}`);
+      await fetchCustomers();
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchCustomers();
@@ -82,9 +73,9 @@ export function useCustomer() {
     customers,
     loading,
     error,
-    fetchCustomerById,
+    fetchCustomers,
+    createCustomer,
     updateCustomer,
-    deleteCustomer,
-    refresh: fetchCustomers
+    deleteCustomer
   };
 }

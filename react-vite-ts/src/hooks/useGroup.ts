@@ -6,7 +6,7 @@ export interface Familiar {
   FamiliarID: number;
   GroupID?: number; 
   name: string;
-  image?: string;
+  img?: string;
   species?: string;
   size?: string;
   color?: string;
@@ -20,12 +20,13 @@ export interface Group {
   GroupID: number;
   WizardID?: number;
   price: number;
-  species?: string; 
-  size?: string; 
-  color?: string; 
-  pattern?: string; 
-  personality?: string; 
-  rarity?: string; 
+
+  species_type?: string;
+  size_range?: string;
+  color_theme?: string;
+  pattern_type?: string;
+  personality_type?: string;
+  rarity_tier?: string;
   typing?: any;
 }
 
@@ -38,7 +39,7 @@ export const useGroup = () => {
   // Fetch ALL familiars independently
   const fetchFamiliars = async () => {
     try {
-      const res = await api.get("/familiars");
+      const res = await api.get("/api/familiars");
       setAllFamiliars(res.data);
     } catch (err: any) {
       console.error("Error fetching familiars:", err);
@@ -48,10 +49,10 @@ export const useGroup = () => {
   // Fetch groups ONLY (no familiars inside them)
   const fetchGroups = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const res = await api.get("/groups"); 
+      const res = await api.get("/api/groups");
       setGroups(res.data);
+      setError(null);
     } catch (err: any) {
       console.error("Error fetching groups:", err);
       setError(err.response?.data?.error || err.message || "Unknown error");
@@ -62,46 +63,35 @@ export const useGroup = () => {
 
   const createGroup = async (payload: Partial<Group>) => {
     try {
-      setError(null);
-      await api.post("/groups", payload); 
+      await api.post("/api/groups", payload);
       await fetchGroups();
     } catch (err: any) {
       console.error("Error creating group:", err);
-      const msg = err.response?.data?.error || err.message || "Unknown error";
-      setError(msg);
+      setError(err.response?.data?.error || err.message || "Unknown error");
       throw err;
     }
   };
 
   const updateGroup = async (GroupID: number, payload: Partial<Group>) => {
     try {
-      setError(null);
-      await api.put(`/groups/${GroupID}`, payload); 
+      await api.put(`/api/groups/${GroupID}`, payload);
       await fetchGroups();
     } catch (err: any) {
       console.error("Error updating group:", err);
-      const msg = err.response?.data?.error || err.message || "Unknown error";
-      setError(msg);
+      setError(err.response?.data?.error || err.message || "Unknown error");
       throw err;
     }
   };
 
   const deleteGroup = async (GroupID: number) => {
     try {
-      setError(null);
-      await api.delete(`/groups/${GroupID}`); 
+      await api.delete(`/api/groups/${GroupID}`);
       await fetchGroups();
     } catch (err: any) {
       console.error("Error deleting group:", err);
-      const msg = err.response?.data?.error || err.message || "Unknown error";
-      setError(msg);
+      setError(err.response?.data?.error || err.message || "Unknown error");
       throw err;
     }
-  };
-
-  // Helper function to get familiars for a specific group
-  const getFamiliarsByGroup = (groupId: number) => {
-    return allFamiliars.filter(f => f.GroupID === groupId);
   };
 
   useEffect(() => {
@@ -117,10 +107,5 @@ export const useGroup = () => {
     createGroup,
     updateGroup,
     deleteGroup,
-    getFamiliarsByGroup,
-    refresh: () => {
-      fetchGroups();
-      fetchFamiliars();
-    }
   };
 };
