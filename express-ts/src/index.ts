@@ -1,11 +1,11 @@
 import express from 'express';
-import { sequelize } from '../models';
-import customerRoutes from '../routes/customerRoutes';
-import familiarRoutes from '../routes/familiarRoutes';
-import groupRoutes from '../routes/groupRoutes';
-import wizardRoutes from '../routes/wizardRoutes';
-import contractRoutes from '../routes/contractRoutes';
-import authRoutes from '../routes/authRoutes';
+import { sequelize } from './models';
+import customerRoutes from './routes/customerRoutes';
+import familiarRoutes from './routes/familiarRoutes';
+import groupRoutes from './routes/groupRoutes';
+import wizardRoutes from './routes/wizardRoutes';
+import contractRoutes from './routes/contractRoutes';
+import authRoutes from './routes/authRoutes';
 import cors from "cors";
 
 const app = express();
