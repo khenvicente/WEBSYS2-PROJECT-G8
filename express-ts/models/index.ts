@@ -5,17 +5,22 @@ import { customerModel, Customer } from './customer';
 import { familiarModel, Familiar } from './familiar';
 import { contractModel, Contract } from './contract';
 
-export const sequelize = new Sequelize(
-  process.env.DB_NAME || 'famili_dev',
-  process.env.DB_USER || 'websys2',
-  process.env.DB_PASS || 'websys2',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    dialect: 'postgres',
-    port: 5432,
-    logging: false,
-  }
-);
+export const sequelize = new Sequelize(process.env.DATABASE_URL || '', {
+  dialect: 'postgres',
+  protocol: 'postgres',
+  logging: false,
+});
+// export const sequelize = new Sequelize(
+//   process.env.DB_NAME || 'famili_dev',
+//   process.env.DB_USER || 'websys2',
+//   process.env.DB_PASS || 'websys2',
+//   {
+//     host: process.env.DB_HOST || 'localhost',
+//     dialect: 'postgres',
+//     port: 5432,
+//     logging: false,
+//   }
+// );
 
 wizardModel(sequelize);
 groupModel(sequelize);
