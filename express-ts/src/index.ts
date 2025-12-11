@@ -12,9 +12,10 @@ const app = express();
 const PORT = process.env.PORT || 4200;
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: true,
   credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,13 +35,16 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(500).json({ error: 'Internal server error' });
 });
 
-sequelize.sync()
+sequelize.authenticate()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-      console.log('Database synced successfully');
-    });
+    console.log("Database connected!");
+    return sequelize.sync();
   })
   .catch((err: any) => {
-    console.error('Database sync failed:', err);
+    console.error("Database connection failed:", err);
+  })
+  .finally(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   });
