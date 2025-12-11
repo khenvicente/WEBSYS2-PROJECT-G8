@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
-import { Wizard, Contract } from '../types/index';
+import { wizardQueries, groupQueries, contractQueries } from '../db/queries';
 
 // Get all wizards
 export const getAllWizards = async (_req: Request, res: Response): Promise<void> => {
   try {
-    // TODO: fetch wizards from DB
-    res.status(200).json({ wizards: [] });
-  } catch {
+    const wizards = await wizardQueries.findAll();
+    res.status(200).json({ wizards });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error fetching wizards' });
   }
 };
@@ -20,10 +21,14 @@ export const getWizardById = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // TODO: fetch wizard by id from DB
-    res.status(200).json({ wizard: null });
-  } catch {
-    res.status(500).json({ error: 'Error fetching wizard' });
+    const wizard = await wizardQueries.findById(Number(WizardID));
+    
+    // Remove password from response
+    const { password, ...safeWizard } = wizard;
+    res.status(200).json({ wizard: safeWizard });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: 'Wizard not found' });
   }
 };
 
@@ -31,15 +36,31 @@ export const getWizardById = async (req: Request, res: Response): Promise<void> 
 export const updateWizard = async (req: Request, res: Response): Promise<void> => {
   try {
     const { WizardID } = req.params;
-    const { name } = req.body;
+    const updates = req.body;
+    
     if (!WizardID) {
       res.status(400).json({ error: 'WizardID is required' });
       return;
     }
 
-    // TODO: update wizard in DB
-    res.status(200).json({ message: 'Wizard updated' });
-  } catch {
+    // Check if wizard exists
+    try {
+      await wizardQueries.findById(Number(WizardID));
+    } catch (err) {
+      res.status(404).json({ error: 'Wizard not found' });
+      return;
+    }
+
+    // Don't allow password updates through this endpoint
+    delete updates.password;
+
+    const updatedWizard = await wizardQueries.update(Number(WizardID), updates);
+    
+    // Remove password from response
+    const { password, ...safeWizard } = updatedWizard;
+    res.status(200).json({ message: 'Wizard updated', wizard: safeWizard });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error updating wizard' });
   }
 };
@@ -53,9 +74,18 @@ export const deleteWizard = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // TODO: delete wizard from DB
+    // Check if wizard exists
+    try {
+      await wizardQueries.findById(Number(WizardID));
+    } catch (err) {
+      res.status(404).json({ error: 'Wizard not found' });
+      return;
+    }
+
+    await wizardQueries.delete(Number(WizardID));
     res.status(200).json({ message: 'Wizard deleted' });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error deleting wizard' });
   }
 };
@@ -69,9 +99,10 @@ export const getWizardGroups = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // TODO: fetch groups from DB where Group.WizardID = WizardID
-    res.status(200).json({ groups: [] });
-  } catch {
+    const groups = await groupQueries.findByWizard(Number(WizardID));
+    res.status(200).json({ groups });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error fetching wizard groups' });
   }
 };
@@ -81,14 +112,46 @@ export const reviewContract = async (req: Request, res: Response): Promise<void>
   try {
     const { WizardID, ContractID } = req.params;
     const { action } = req.body; // 'accepted' | 'rejected'
+    
     if (!WizardID || !ContractID || !action) {
       res.status(400).json({ error: 'WizardID, ContractID and action are required' });
       return;
     }
 
-    // TODO: verify wizard owns the group, update contract status in DB
-    res.status(200).json({ message: `Contract ${action}`, WizardID, ContractID, action });
-  } catch {
+    if (action !== 'accepted' && action !== 'rejected') {
+      res.status(400).json({ error: 'Action must be "accepted" or "rejected"' });
+      return;
+    }
+
+    // Get contract with details
+    const contract = await contractQueries.findWithDetails(Number(ContractID));
+    
+    if (!contract) {
+      res.status(404).json({ error: 'Contract not found' });
+      return;
+    }
+
+    // Verify wizard owns the group (through familiar)
+    const familiar = contract.familiars;
+    if (!familiar || !familiar.GroupID) {
+      res.status(400).json({ error: 'Familiar has no assigned group' });
+      return;
+    }
+
+    const group = await groupQueries.findById(familiar.GroupID);
+    if (group.WizardID !== Number(WizardID)) {
+      res.status(403).json({ error: 'Wizard does not own this group' });
+      return;
+    }
+
+    // Update contract status
+    const updatedContract = await contractQueries.update(Number(ContractID), { status: action });
+    res.status(200).json({ 
+      message: `Contract ${action}`, 
+      contract: updatedContract 
+    });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error reviewing contract' });
   }
 };
@@ -102,9 +165,23 @@ export const getWizardContracts = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // TODO: fetch contracts where wizard owns the group
-    res.status(200).json({ contracts: [] });
-  } catch {
+    // Get all groups owned by wizard
+    const groups = await groupQueries.findByWizard(Number(WizardID));
+    const groupIds = groups.map(g => g.GroupID);
+
+    // Get all contracts with details
+    const allContracts = await contractQueries.findAllWithDetails();
+    
+    // Filter contracts where familiar belongs to wizard's groups
+    const wizardContracts = allContracts.filter(contract => {
+      return contract.familiars && 
+             contract.familiars.GroupID && 
+             groupIds.includes(contract.familiars.GroupID);
+    });
+
+    res.status(200).json({ contracts: wizardContracts });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Error fetching wizard contracts' });
   }
 };

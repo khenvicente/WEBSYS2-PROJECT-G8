@@ -1,9 +1,7 @@
 // contractController.ts
 import { Request, Response } from 'express';
-import { Contract } from '../models/contract';
-import { Customer } from '../models/customer';
-import { Familiar } from '../models/familiar';
-import { Group } from '../models/group';
+import { contractQueries, customerQueries, familiarQueries } from '../db/queries';
+import { Customer, Familiar } from '../db/types';
 
 export const ContractController = {
   // ---------------------------------------------------------
@@ -11,12 +9,7 @@ export const ContractController = {
   // ---------------------------------------------------------
   async getContracts(req: Request, res: Response) {
     try {
-      const contracts = await Contract.findAll({
-      include: [
-        { model: Customer, as: 'customer' },
-        { model: Familiar, as: 'familiar' }
-      ]
-      });
+      const contracts = await contractQueries.findAllWithDetails();
 
       res.status(200).json(contracts);
     } catch (error: any) {
@@ -33,9 +26,10 @@ export const ContractController = {
 
     try {
       // 1. Check if customer exists
-      const customer = await Customer.findByPk(customerId);
-
-      if (!customer) {
+      let customer;
+      try {
+        customer = await customerQueries.findById(customerId);
+      } catch (err) {
         return res.status(404).json({ message: 'Customer not found.' });
       }
 
@@ -45,18 +39,15 @@ export const ContractController = {
       }
 
       // 3. Ensure customer has NO ACTIVE CONTRACT
-      const existingContract = await Contract.findOne({
-        where: { CustomerID: customerId, status: 'active' }
-      });
+      const existingContracts = await contractQueries.findByCustomer(customerId);
+      const activeContract = existingContracts.find(c => c.status === 'active');
 
-      if (existingContract) {
+      if (activeContract) {
         return res.status(400).json({ message: 'Customer already has an active contract.' });
       }
 
       // 4. Fetch familiars in the customer's group
-      const familiars = await Familiar.findAll({
-        where: { GroupID: customer.GroupID }
-      });
+      const familiars = await familiarQueries.findByGroup(customer.GroupID);
 
       if (familiars.length === 0) {
         return res.status(400).json({ message: 'No familiars available in this group.' });
@@ -70,7 +61,7 @@ export const ContractController = {
 
         if (accepted) {
           // Create contract
-          const newContract = await Contract.create({
+          const newContract = await contractQueries.create({
             CustomerID: customerId,
             FamiliarID: familiar.FamiliarID,
             status: 'active'
@@ -93,10 +84,57 @@ export const ContractController = {
       console.error(error);
       res.status(500).json({ message: 'Failed to create contract.' });
     }
+  },
+
+  // ---------------------------------------------------------
+  // GET CONTRACT BY ID
+  // ---------------------------------------------------------
+  async getContractById(req: Request, res: Response) {
+    const { id } = req.params;
+
+    try {
+      const contract = await contractQueries.findWithDetails(parseInt(id));
+      res.status(200).json(contract);
+    } catch (error: any) {
+      console.error(error);
+      res.status(404).json({ message: 'Contract not found.' });
+    }
+  },
+
+  // ---------------------------------------------------------
+  // UPDATE CONTRACT STATUS
+  // ---------------------------------------------------------
+  async updateContract(req: Request, res: Response) {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+      const updatedContract = await contractQueries.update(parseInt(id), { status });
+      res.status(200).json({
+        message: 'Contract updated successfully',
+        contract: updatedContract
+      });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to update contract.' });
+    }
+  },
+
+  // ---------------------------------------------------------
+  // DELETE CONTRACT
+  // ---------------------------------------------------------
+  async deleteContract(req: Request, res: Response) {
+    const { id } = req.params;
+
+    try {
+      await contractQueries.delete(parseInt(id));
+      res.status(200).json({ message: 'Contract deleted successfully' });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ message: 'Failed to delete contract.' });
+    }
   }
 };
-
-
 
 // ---------------------------------------------------------
 // CONTRACT CHANCE FUNCTION

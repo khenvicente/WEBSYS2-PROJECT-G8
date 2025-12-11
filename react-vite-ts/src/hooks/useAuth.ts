@@ -10,7 +10,6 @@ interface AuthResponse {
     name: string;
     role: "wizard" | "customer";
   };
-  token: string;
 }
 
 export const useAuth = () => {
@@ -21,8 +20,8 @@ export const useAuth = () => {
   const register = async (data: {
     email: string;
     password: string;
-    username?: string;
-    name?: string;
+    username: string;
+    name: string;
     role: string;
   }) => {
     setLoading(true);
@@ -30,9 +29,8 @@ export const useAuth = () => {
     setSuccess(null);
 
     try {
-      const res = await api.post<AuthResponse>("/api/auth/register", data);
+      const res = await api.post<AuthResponse>("/auth/register", data);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
       setSuccess(res.data.message);
       return res.data.user;
     } catch (err: any) {
@@ -50,9 +48,8 @@ export const useAuth = () => {
     setSuccess(null);
 
     try {
-      const res = await api.post<AuthResponse>("/api/auth/login", data);
+      const res = await api.post<AuthResponse>("/auth/login", data);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
       setSuccess(res.data.message);
       return res.data.user;
     } catch (err: any) {
@@ -64,5 +61,28 @@ export const useAuth = () => {
     }
   };
 
-  return { loading, error, success, register, login };
+  const logout = () => {
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
+
+  const getUser = () => {
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
+  };
+
+  const isAuthenticated = () => {
+    return !!localStorage.getItem("user");
+  };
+
+  return { 
+    loading, 
+    error, 
+    success, 
+    register, 
+    login, 
+    logout, 
+    getUser, 
+    isAuthenticated 
+  };
 };

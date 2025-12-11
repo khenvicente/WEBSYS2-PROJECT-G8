@@ -1,25 +1,25 @@
 import { Request, Response } from "express";
-import { Group } from "../models";
+import { groupQueries } from "../db/queries";
 
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { price, WizardID } = req.body;
+    const { price, WizardID, species, size, color, pattern, personality, rarity, typing } = req.body;
 
     if (price == null) {
       res.status(400).json({ error: "Price is required" });
       return;
     }
 
-    const newGroup = await Group.create({
+    const newGroup = await groupQueries.create({
       price,
-      WizardID: WizardID || null,
-      species: null,
-      size: null,
-      color: null,
-      pattern: null,
-      personality: null,
-      rarity: null,
-      typing: null,
+      WizardID: WizardID || undefined,
+      species: species || undefined,
+      size: size || undefined,
+      color: color || undefined,
+      pattern: pattern || undefined,
+      personality: personality || undefined,
+      rarity: rarity || undefined,
+      typing: typing || undefined,
     });
 
     res.status(201).json(newGroup);
@@ -31,7 +31,7 @@ export const createGroup = async (req: Request, res: Response): Promise<void> =>
 
 export const getAllGroups = async (_req: Request, res: Response) => {
   try {
-    const groups = await Group.findAll();
+    const groups = await groupQueries.findAll();
     res.status(200).json(groups);
   } catch (err) {
     res.status(500).json({ error: "Error fetching groups" });
@@ -40,30 +40,25 @@ export const getAllGroups = async (_req: Request, res: Response) => {
 
 export const getGroupById = async (req: Request, res: Response) => {
   try {
-    const group = await Group.findByPk(req.params.GroupID);
-
-    if (!group) {
-      res.status(404).json({ error: "Group not found" });
-      return;
-    }
-
+    const group = await groupQueries.findById(Number(req.params.GroupID));
     res.json(group);
   } catch (err) {
-    res.status(500).json({ error: "Error fetching group" });
+    res.status(404).json({ error: "Group not found" });
   }
 };
 
 export const updateGroup = async (req: Request, res: Response) => {
   try {
-    const group = await Group.findByPk(req.params.GroupID);
-
-    if (!group) {
+    // Check if group exists
+    try {
+      await groupQueries.findById(Number(req.params.GroupID));
+    } catch (err) {
       res.status(404).json({ error: "Group not found" });
       return;
     }
 
-    await group.update(req.body);
-    res.json(group);
+    const updatedGroup = await groupQueries.update(Number(req.params.GroupID), req.body);
+    res.json(updatedGroup);
   } catch (err) {
     res.status(500).json({ error: "Error updating group" });
   }
@@ -71,15 +66,15 @@ export const updateGroup = async (req: Request, res: Response) => {
 
 export const deleteGroup = async (req: Request, res: Response) => {
   try {
-    const group = await Group.findByPk(req.params.GroupID);
-
-    if (!group) {
+    // Check if group exists
+    try {
+      await groupQueries.findById(Number(req.params.GroupID));
+    } catch (err) {
       res.status(404).json({ error: "Group not found" });
       return;
     }
 
-    await group.destroy();
-
+    await groupQueries.delete(Number(req.params.GroupID));
     res.json({ message: "Group deleted" });
   } catch (err) {
     res.status(500).json({ error: "Error deleting group" });

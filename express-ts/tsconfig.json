@@ -2,16 +2,17 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
+    "lib": ["ES2020"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"],
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "types": ["node", "jest"],
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*", "seeders/20251303130932-familiar-seeder.js", "types"],
-  "exclude": ["node_modules"]
-
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
-
