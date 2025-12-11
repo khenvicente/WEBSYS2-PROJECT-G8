@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["node"],
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist"
   },
   "include": ["src/**/*", "seeders/20251303130932-familiar-seeder.js", "types"],
