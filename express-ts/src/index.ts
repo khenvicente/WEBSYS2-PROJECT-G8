@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 4200;
 
 app.use(cors({
-  origin: "https://websys2-project-g8-mm7i.onrender.com",
+  origin: "https://websys2-project-g8-1.onrender.com",
   credentials: true
 }));
 
@@ -48,3 +48,4 @@ sequelize.authenticate()
       console.log(`Server running on port ${PORT}`);
     });
   });
+
